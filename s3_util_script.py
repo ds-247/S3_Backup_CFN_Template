@@ -1,18 +1,24 @@
 import boto3
 import zipfile
 
-BUCKET_NAME = 'lambda-copy-code-bucket'
+LAMBDA_BUCKET_NAME = 'lambda-copy-code-bucket'
 REGION_NAME = 'ap-south-1'
 ZIP_FILE_NAME = 'lambda_function.zip'
-LAMBDA_HANDLER_FILE_PATH= 'lambda_function.py'
+LAMBDA_HANDLER_FILE_PATH= 'lambda_logic.py'
 MAIN_BUCKET_NAME = 'main-bucket-08-05'
 BACKUP_BUCKET_NAME = 'backup-bucket-08-05'
 STACK_NAME = 'S3-Auto-Backup-Stack'
 CFN_TEMPLATE_PATH = 'automation.yaml'
+LAMBDA_RUNTIME_VERSION = 'python3.12'
+LAMBDA_HANDLER = 'lambda_function.lambda_handler'
 
 Parameters=[
         {'ParameterKey': 'MainBucketName', 'ParameterValue': MAIN_BUCKET_NAME},
         {'ParameterKey': 'BackupBucketName', 'ParameterValue': BACKUP_BUCKET_NAME},
+        {'ParameterKey': 'LambdaRuntimeVersion', 'ParameterValue': LAMBDA_RUNTIME_VERSION},
+        {'ParameterKey': 'LambdaHandler', 'ParameterValue': LAMBDA_HANDLER},
+        {'ParameterKey': 'LambdaBucketName', 'ParameterValue': LAMBDA_BUCKET_NAME},
+        {'ParameterKey': 'LamdbaBucketKey', 'ParameterValue': ZIP_FILE_NAME},
 ]
 
 
@@ -67,14 +73,14 @@ def create_stack(cf_client, stack_name, template_body, parameters):
 def main() :
     s3 = boto3.client('s3', REGION_NAME)
     cf = boto3.client('cloudformation', REGION_NAME)
-    # if not create_bucket(s3, BUCKET_NAME, REGION_NAME):
+    # if not create_bucket(s3, LAMBDA_BUCKET_NAME, REGION_NAME):
     #     return
     
-    # if not zip_lambda_function():
-    #     return
+    if not zip_lambda_function():
+        return
 
-    # if not upload_to_s3(s3, BUCKET_NAME, ZIP_FILE_NAME):
-    #     return
+    if not upload_to_s3(s3, LAMBDA_BUCKET_NAME, ZIP_FILE_NAME):
+        return
 
     with open(CFN_TEMPLATE_PATH, 'r') as f:
         template_body = f.read()

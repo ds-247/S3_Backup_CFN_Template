@@ -5,9 +5,27 @@ Parameters:
   MainBucketName:
     Type: String
     Description: The name of the source S3 bucket to copy files from.
+
   BackupBucketName:
     Type: String
     Description: The name of the destination S3 bucket to copy files to.
+
+  LambdaRuntimeVersion:
+    Type: String
+    Description: Lambda runtime version to use.
+
+  LambdaHandler:
+    Type: String
+    Description: Lambda function handler
+  
+  LambdaBucketName:
+    Type: String
+    Description: Name of the S3 bucket where Lambda code is stored
+  
+  LamdbaBucketKey:
+    Type: String
+    Description: S3 object key for the Lambda code zip file
+
 
 Resources:
   MainBucket:
@@ -18,4 +36,17 @@ Resources:
   BackupBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
-      BucketName: !Ref BackupBucketName
+      BucketName: !Ref BackupBucketName 
+
+  BackupLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: !Ref LambdaRuntimeVersion
+      Role: arn:aws:iam::194325853642:role/lambda-s3-access-role # IAM role that Lambda will use
+      Handler: !Ref LambdaHandler  # Entry point: fileName.functionName
+      Environment:
+        Variables:
+          BACKUP_BUCKET: !Ref BackupBucketName
+      Code:
+        S3Bucket: !Ref LambdaBucketName
+        S3Key: !Ref LamdbaBucketKey

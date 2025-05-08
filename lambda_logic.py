@@ -8,7 +8,7 @@ def lambda_handler(event, context):
     source_bucket= event['Records'][0]['s3']['bucket']['name']
     source_key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'], encoding='utf-8')
 
-    destination_bucket = os.environ['DEST_BUCKET']
+    destination_bucket = os.environ['BACKUP_BUCKET']
 
     try:
         copy_source = {
