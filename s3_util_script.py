@@ -1,10 +1,11 @@
 import boto3
 import zipfile
+import os
 
 LAMBDA_BUCKET_NAME = 'lambda-copy-code-bucket'
 REGION_NAME = 'ap-south-1'
 ZIP_FILE_NAME = 'lambda_function.zip'
-LAMBDA_HANDLER_FILE_PATH= 'lambda_logic.py'
+LAMBDA_HANDLER_FILE_PATH= 'lambda_function.py'
 MAIN_BUCKET_NAME = 'main-bucket-08-05'
 BACKUP_BUCKET_NAME = 'backup-bucket-08-05'
 STACK_NAME = 'S3-Auto-Backup-Stack'
@@ -51,10 +52,14 @@ def upload_to_s3(s3_client, bucket_name, file_path):
     try:
         s3_client.upload_file(file_path, bucket_name, file_path)
         print(f"Uploaded {file_path} to s3://{bucket_name}/{file_path}")
-        return True
     except Exception as e:
         print(f"Error uploading {file_path} to s3://{bucket_name}: {e}")
         return False
+    finally:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            print(f"Deleted local zip file: {file_path}")
+            return True
 
 
 def create_stack(cf_client, stack_name, template_body, parameters):
@@ -73,8 +78,8 @@ def create_stack(cf_client, stack_name, template_body, parameters):
 def main() :
     s3 = boto3.client('s3', REGION_NAME)
     cf = boto3.client('cloudformation', REGION_NAME)
-    # if not create_bucket(s3, LAMBDA_BUCKET_NAME, REGION_NAME):
-    #     return
+    if not create_bucket(s3, LAMBDA_BUCKET_NAME, REGION_NAME):
+        return
     
     if not zip_lambda_function():
         return

@@ -28,11 +28,6 @@ Parameters:
 
 
 Resources:
-  MainBucket:
-    Type: 'AWS::S3::Bucket'
-    Properties:
-      BucketName: !Ref MainBucketName
-
   BackupBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
@@ -41,6 +36,7 @@ Resources:
   BackupLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
+      FunctionName: BackupLambdaFunction
       Runtime: !Ref LambdaRuntimeVersion
       Role: arn:aws:iam::194325853642:role/lambda-s3-access-role # IAM role that Lambda will use
       Handler: !Ref LambdaHandler  # Entry point: fileName.functionName
@@ -50,3 +46,23 @@ Resources:
       Code:
         S3Bucket: !Ref LambdaBucketName
         S3Key: !Ref LamdbaBucketKey
+
+  MainBucket:
+    Type: 'AWS::S3::Bucket'
+    DependsOn: LambdaInvokePermission
+    Properties:
+      BucketName: !Ref MainBucketName
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt BackupLambdaFunction.Arn
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    DependsOn: BackupLambdaFunction
+    Properties:
+      FunctionName: !GetAtt BackupLambdaFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub arn:aws:s3:::${MainBucketName} # The ARN of the source bucket
+
