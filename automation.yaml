@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template to create s3 buckets and copy files from one bucket to another
+
+Parameters:
+  MainBucketName:
+    Type: String
+    Description: The name of the source S3 bucket to copy files from.
+  BackupBucketName:
+    Type: String
+    Description: The name of the destination S3 bucket to copy files to.
+
+Resources:
+  MainBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref MainBucketName
+
+  BackupBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref BackupBucketName

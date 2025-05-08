@@ -5,6 +5,17 @@ BUCKET_NAME = 'lambda-copy-code-bucket'
 REGION_NAME = 'ap-south-1'
 ZIP_FILE_NAME = 'lambda_function.zip'
 LAMBDA_HANDLER_FILE_PATH= 'lambda_function.py'
+MAIN_BUCKET_NAME = 'main-bucket-08-05'
+BACKUP_BUCKET_NAME = 'backup-bucket-08-05'
+STACK_NAME = 'S3-Auto-Backup-Stack'
+CFN_TEMPLATE_PATH = 'automation.yaml'
+
+Parameters=[
+        {'ParameterKey': 'MainBucketName', 'ParameterValue': MAIN_BUCKET_NAME},
+        {'ParameterKey': 'BackupBucketName', 'ParameterValue': BACKUP_BUCKET_NAME},
+]
+
+
 
 def create_bucket(s3_client, bucket_name, region):
     try:
@@ -40,8 +51,22 @@ def upload_to_s3(s3_client, bucket_name, file_path):
         return False
 
 
+def create_stack(cf_client, stack_name, template_body, parameters):
+    try:
+        response = cf_client.create_stack(
+            StackName=stack_name,
+            TemplateBody=template_body,
+            Parameters=parameters,
+        )
+        print(f"Stack {stack_name} creation initiated: {response}")
+        return True
+    except Exception as e:
+        print(f"Error creating stack {stack_name}: {e}")
+        return False
+
 def main() :
     s3 = boto3.client('s3', REGION_NAME)
+    cf = boto3.client('cloudformation', REGION_NAME)
     # if not create_bucket(s3, BUCKET_NAME, REGION_NAME):
     #     return
     
@@ -51,7 +76,11 @@ def main() :
     # if not upload_to_s3(s3, BUCKET_NAME, ZIP_FILE_NAME):
     #     return
 
-    
+    with open(CFN_TEMPLATE_PATH, 'r') as f:
+        template_body = f.read()
+
+    if not create_stack(cf, STACK_NAME, template_body, Parameters):
+        return
     
 
     
