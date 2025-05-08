@@ -33,12 +33,35 @@ Resources:
     Properties:
       BucketName: !Ref BackupBucketName 
 
+  LambdaFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Policies:
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: "arn:aws:s3:::*/*"
+          PolicyName: !Sub "lambda-policy-role"
+
   BackupLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: BackupLambdaFunction
       Runtime: !Ref LambdaRuntimeVersion
-      Role: arn:aws:iam::194325853642:role/lambda-s3-access-role # IAM role that Lambda will use
+      Role: !GetAtt LambdaFunctionRole.Arn # IAM role that Lambda will use
       Handler: !Ref LambdaHandler  # Entry point: fileName.functionName
       Environment:
         Variables:

@@ -68,6 +68,7 @@ def create_stack(cf_client, stack_name, template_body, parameters):
             StackName=stack_name,
             TemplateBody=template_body,
             Parameters=parameters,
+            Capabilities=['CAPABILITY_IAM'],
         )
         print(f"Stack {stack_name} creation initiated: {response}")
         return True
